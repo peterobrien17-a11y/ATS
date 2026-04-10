@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Secure IT Recruiting — ATS</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#ffffff;--bg2:#f7f7f5;--bg3:#f0efe9;
+  --t1:#1a1a18;--t2:#5c5c58;--t3:#9a9990;
+  --b1:rgba(0,0,0,0.10);--b2:rgba(0,0,0,0.18);
+  --r:8px;--rl:12px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg3);color:var(--t1);font-size:13px;}
+.app{display:flex;height:100vh;}
+
+/* SIDEBAR */
+.sb{width:220px;min-width:220px;background:var(--bg);border-right:0.5px solid var(--b1);display:flex;flex-direction:column;overflow-y:auto;}
+.sb-brand{padding:16px 18px 14px;border-bottom:0.5px solid var(--b1);}
+.sb-name{font-size:14px;font-weight:600;}
+.sb-sub{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;margin-top:1px;}
+.sb-sec{padding:10px 14px 3px;font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;}
+.ni{display:flex;align-items:center;gap:8px;padding:7px 16px;font-size:12px;cursor:pointer;color:var(--t2);transition:background .12s;user-select:none;}
+.ni:hover{background:var(--bg2);color:var(--t1);}
+.ni.on{background:var(--bg2);color:var(--t1);font-weight:600;}
+.ni-ic{font-size:11px;width:14px;text-align:center;flex-shrink:0;}
+.ni-badge{margin-left:auto;font-size:10px;font-weight:600;padding:1px 6px;border-radius:10px;background:#E6F1FB;color:#0C447C;}
+.sb-foot{margin-top:auto;padding:10px 12px;border-top:0.5px solid var(--b1);}
+.sb-status{display:flex;align-items:center;margin-bottom:8px;font-size:11px;color:var(--t3);}
+.sb-dot{width:7px;height:7px;border-radius:50%;background:#1D9E75;display:inline-block;margin-right:5px;}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;}
+.topbar{background:var(--bg);border-bottom:0.5px solid var(--b1);padding:11px 20px;display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap;}
+.tb-title{font-size:13px;font-weight:600;flex:1;min-width:100px;}
+.tb-search{display:flex;align-items:center;gap:6px;background:var(--bg2);border:0.5px solid var(--b1);border-radius:var(--r);padding:5px 10px;width:180px;}
+.tb-search input{border:none;background:transparent;font-size:12px;color:var(--t1);outline:none;width:100%;font-family:inherit;}
+.tb-search input::placeholder{color:var(--t3);}
+
+/* BUTTONS */
+.btn{padding:6px 12px;font-size:12px;border-radius:var(--r);border:0.5px solid var(--b2);background:var(--bg);cursor:pointer;color:var(--t1);display:inline-flex;align-items:center;gap:5px;transition:background .12s;font-family:inherit;white-space:nowrap;}
+.btn:hover{background:var(--bg2);}
+.btn.pri{background:var(--t1);color:#fff;border-color:transparent;}
+.btn.pri:hover{opacity:.85;}
+.btn.sm{padding:4px 9px;font-size:11px;}
+.btn.dng{background:#FCEBEB;color:#791F1F;border-color:#F09595;}
+
+/* STATS BAR */
+.stats-bar{display:flex;gap:9px;padding:12px 20px 0;background:var(--bg);border-bottom:0.5px solid var(--b1);flex-shrink:0;flex-wrap:wrap;}
+.sc{background:var(--bg2);border-radius:var(--r);padding:8px 13px;margin-bottom:10px;}
+.sc-l{font-size:10px;color:var(--t3);margin-bottom:1px;}
+.sc-v{font-size:18px;font-weight:600;}
+
+/* SORT BAR */
+.sort-bar{display:flex;align-items:center;gap:8px;padding:7px 20px;background:var(--bg);border-bottom:0.5px solid var(--b1);flex-shrink:0;flex-wrap:wrap;}
+.sort-lbl{font-size:11px;color:var(--t3);}
+.sort-btn{padding:3px 9px;font-size:11px;border-radius:var(--r);border:0.5px solid var(--b1);background:var(--bg2);cursor:pointer;color:var(--t2);font-family:inherit;}
+.sort-btn.on{background:var(--t1);color:#fff;border-color:transparent;}
+
+/* CLIENT TABS */
+.ftabs{padding:0 20px;border-bottom:0.5px solid var(--b1);background:var(--bg);display:flex;overflow-x:auto;flex-shrink:0;}
+.ftab{padding:10px 13px;font-size:12px;cursor:pointer;color:var(--t2);border-bottom:2px solid transparent;white-space:nowrap;margin-bottom:-.5px;}
+.ftab.on{color:var(--t1);border-bottom-color:var(--t1);font-weight:600;}
+
+/* CONTENT */
+.content{flex:1;overflow:hidden;}
+.view{height:100%;overflow:hidden;}
+
+/* KANBAN */
+.kb-wrap{overflow-x:auto;overflow-y:hidden;height:100%;padding:16px 20px;}
+.kanban{display:flex;gap:10px;height:100%;min-width:max-content;}
+.kcol{display:flex;flex-direction:column;}
+.kcol-w{width:310px;min-width:310px;}
+.kcol-m{width:245px;min-width:245px;}
+.kch{display:flex;align-items:center;justify-content:space-between;padding:8px 11px;border-radius:var(--r) var(--r) 0 0;}
+.kch-lbl{font-size:11px;font-weight:600;}
+.kch-cnt{font-size:11px;opacity:.65;}
+.kcb{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:7px;background:var(--bg2);border-radius:0 0 var(--r) var(--r);}
+.kcb::-webkit-scrollbar{width:3px;}
+.kcb::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);border-radius:2px;}
+.rcard{background:var(--bg);border:0.5px solid var(--b1);border-radius:var(--r);padding:11px;cursor:pointer;transition:border-color .12s,transform .1s;}
+.rcard:hover{border-color:var(--b2);transform:translateY(-1px);}
+.rcard.pr{border-left:2.5px solid #BA7517;}
+.rc-co{font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;}
+.rc-role{font-size:12px;font-weight:600;margin-bottom:7px;line-height:1.3;}
+.rc-det{font-size:11px;color:var(--t2);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rc-det span{color:var(--t3);}
+.pill{font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;display:inline-flex;align-items:center;}
+.prog-wrap{margin-top:7px;}
+.prog-lbl{display:flex;justify-content:space-between;font-size:10px;color:var(--t3);margin-bottom:3px;}
+.prog-track{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:3px;}
+
+/* TABLE */
+.list-wrap{overflow-y:auto;height:100%;padding:16px 20px;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th{text-align:left;padding:7px 9px;font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;border-bottom:0.5px solid var(--b1);cursor:pointer;user-select:none;white-space:nowrap;}
+th:hover{color:var(--t1);}
+td{padding:8px 9px;border-bottom:0.5px solid var(--b1);vertical-align:middle;}
+tr:hover td{background:var(--bg2);cursor:pointer;}
+
+/* SLIDE PANEL */
+.panel{position:absolute;right:0;top:0;bottom:0;width:420px;background:var(--bg);border-left:0.5px solid var(--b1);display:flex;flex-direction:column;z-index:20;transform:translateX(100%);transition:transform .22s ease;box-shadow:-4px 0 20px rgba(0,0,0,.06);}
+.panel.open{transform:translateX(0);}
+.ph{padding:14px 16px 12px;border-bottom:0.5px solid var(--b1);display:flex;justify-content:space-between;align-items:flex-start;}
+.ph-name{font-size:14px;font-weight:600;margin-bottom:2px;}
+.ph-sub{font-size:12px;color:var(--t2);}
+.ph-x{cursor:pointer;font-size:18px;color:var(--t3);padding:2px 6px;border-radius:4px;line-height:1;}
+.ph-x:hover{background:var(--bg2);}
+.pb{flex:1;overflow-y:auto;padding:13px 16px;}
+.psec{margin-bottom:15px;}
+.psec-t{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--t3);margin-bottom:7px;}
+.ir{display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--b1);font-size:12px;}
+.ir:last-child{border-bottom:none;}
+.ir-l{color:var(--t2);}
+.ir-v{color:var(--t1);font-weight:500;text-align:right;max-width:60%;word-break:break-word;}
+.fi{width:100%;font-size:12px;padding:6px 8px;border-radius:var(--r);border:0.5px solid var(--b2);background:var(--bg2);color:var(--t1);outline:none;font-family:inherit;}
+.fi:focus{background:var(--bg);}
+.note-item{background:var(--bg2);border-radius:var(--r);padding:9px 11px;margin-bottom:7px;}
+.note-text{font-size:12px;line-height:1.5;margin-bottom:4px;white-space:pre-wrap;word-break:break-word;}
+.note-meta{font-size:10px;color:var(--t3);}
+.resume-box{background:var(--bg2);border:0.5px solid var(--b1);border-radius:var(--r);padding:10px;font-size:11px;color:var(--t2);line-height:1.6;max-height:200px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;}
+.cand-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--b1);}
+.cand-row:last-child{border-bottom:none;}
+.av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0;}
+.overlay{position:absolute;inset:0;z-index:19;display:none;}
+.overlay.open{display:block;}
+
+/* MODALS */
+.mbg{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.3);}
+.mbg.open{display:flex;}
+.modal{background:var(--bg);border-radius:var(--rl);border:0.5px solid var(--b2);width:480px;max-width:95vw;max-height:90vh;overflow-y:auto;padding:20px;box-shadow:0 8px 32px rgba(0,0,0,.12);}
+.modal.wide{width:540px;}
+.mt{font-size:13px;font-weight:600;margin-bottom:13px;}
+.fl{margin-bottom:9px;}
+.fl-l{font-size:11px;color:var(--t2);margin-bottom:3px;font-weight:500;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:9px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:9px;}
+.ma{display:flex;justify-content:flex-end;gap:7px;margin-top:13px;}
+
+/* MISC */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--t1);color:#fff;padding:10px 16px;border-radius:var(--r);font-size:12px;z-index:200;opacity:0;transition:opacity .3s;pointer-events:none;}
+.toast.show{opacity:1;}
+.has-resume{background:#EAF3DE;color:#27500A;font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;}
+.rep-wrap{overflow-y:auto;height:100%;padding:18px 22px;}
+.rep-t{font-size:12px;font-weight:600;margin-bottom:10px;}
+.drop-z{border:1.5px dashed var(--b2);border-radius:var(--r);padding:22px;text-align:center;cursor:pointer;transition:border-color .15s;}
+.drop-z:hover{border-color:var(--t1);}
+.empty-col{text-align:center;padding:18px 0;font-size:11px;color:var(--t3);}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<div class="sb">
+  <div class="sb-brand">
+    <div class="sb-name">Secure IT Recruiting</div>
+    <div class="sb-sub">Defense &amp; Gov Pipeline</div>
+  </div>
+  <div class="sb-sec">Requisitions</div>
+  <div class="ni on" id="n-reqs" onclick="go('reqs',this)"><span class="ni-ic">&#9670;</span>Open Reqs<span class="ni-badge" id="b-reqs">0</span></div>
+  <div class="sb-sec">Submissions</div>
+  <div class="ni" id="n-board" onclick="go('board',this)"><span class="ni-ic">&#9783;</span>Board<span class="ni-badge" id="b-tot">0</span></div>
+  <div class="ni" id="n-list" onclick="go('list',this)"><span class="ni-ic">&#9776;</span>All Submissions</div>
+  <div class="ni" id="n-arch" onclick="go('arch',this)"><span class="ni-ic">&#128193;</span>Archive<span class="ni-badge" id="b-arch">0</span></div>
+  <div class="sb-sec">Clients</div>
+  <div id="sb-clients"></div>
+  <div class="sb-sec">Reports</div>
+  <div class="ni" id="n-biz" onclick="go('biz',this)"><span class="ni-ic">&#9650;</span>Business</div>
+  <div class="ni" id="n-team" onclick="go('team',this)"><span class="ni-ic">&#9651;</span>Team</div>
+  <div class="sb-sec">Settings</div>
+  <div class="ni" id="n-cfg" onclick="go('cfg',this)"><span class="ni-ic">&#9881;</span>Settings &amp; Import</div>
+  <div class="sb-foot">
+    <div class="sb-status"><span class="sb-dot"></span>In-memory · export to save</div>
+    <button class="btn" style="width:100%;justify-content:center;font-size:11px;margin-bottom:6px;" onclick="openReqM()">+ Add req</button>
+    <button class="btn" style="width:100%;justify-content:center;font-size:11px;" onclick="openSubM()">+ Add submission</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="tb-title" id="pg-title">Open requisitions</div>
+    <div class="tb-search"><span style="color:var(--t3);font-size:11px;">&#128269;</span><input type="text" id="srch" placeholder="Search..." oninput="renderContent()"></div>
+    <select class="btn" id="rec-f" style="cursor:pointer;font-size:11px;" onchange="renderContent()"><option value="">All recruiters</option></select>
+    <button class="btn pri" id="top-btn" onclick="openReqM()">+ Add req</button>
+  </div>
+  <div class="stats-bar" id="stats-bar"></div>
+  <div class="sort-bar" id="sort-bar" style="display:none;">
+    <span class="sort-lbl">Sort by:</span>
+    <button class="sort-btn on" onclick="setSort('date',this)">Date</button>
+    <button class="sort-btn" onclick="setSort('clearance',this)">Clearance</button>
+    <button class="sort-btn" onclick="setSort('role',this)">Position</button>
+    <button class="sort-btn" onclick="setSort('client',this)">Client</button>
+    <button class="sort-btn" onclick="setSort('stage',this)">Status</button>
+  </div>
+  <div class="ftabs" id="ftabs"></div>
+  <div class="content"><div class="view" id="va"></div></div>
+  <div class="overlay" id="overlay" onclick="closePanel()"></div>
+  <div class="panel" id="panel">
+    <div class="ph">
+      <div><div class="ph-name" id="p-name"></div><div class="ph-sub" id="p-sub"></div></div>
+      <div class="ph-x" onclick="closePanel()">&#10005;</div>
+    </div>
+    <div class="pb" id="p-body"></div>
+  </div>
+</div>
+</div>
+
+<!-- REQ MODAL -->
+<div class="mbg" id="mReq">
+<div class="modal">
+  <div class="mt" id="mReq-t">Add requisition</div>
+  <div class="g2">
+    <div class="fl" style="margin:0"><div class="fl-l">Client</div><input class="fi" id="rq-co" list="co-dl" placeholder="Client name"><datalist id="co-dl"></datalist></div>
+    <div class="fl" style="margin:0"><div class="fl-l">Status</div><select class="fi" id="rq-st"><option value="priority">Priority</option><option value="active" selected>Active</option><option value="hold">Hold</option></select></div>
+  </div>
+  <div class="fl"><div class="fl-l">Role / Position</div><input class="fi" id="rq-role" placeholder="e.g. Sr. Cloud Engineer III"></div>
+  <div class="g3">
+    <div class="fl" style="margin:0"><div class="fl-l">Seats</div><input class="fi" id="rq-seats" type="number" min="1" value="1"></div>
+    <div class="fl" style="margin:0"><div class="fl-l">Req ID</div><input class="fi" id="rq-rid" placeholder="26-022"></div>
+    <div class="fl" style="margin:0"><div class="fl-l">Recruiter</div><select class="fi" id="rq-rec"><option value="">Unassigned</option></select></div>
+  </div>
+  <div class="fl"><div class="fl-l">Clearance required</div>
+    <select class="fi" id="rq-clr"><option value="">— select —</option><option>TS/SCI with CI poly</option><option>TS/SCI with Full Scope Poly</option><option>TS/SCI</option><option>TS</option><option>Secret</option><option>Public Trust</option><option>FSP requirements</option><option>Other</option></select>
+  </div>
+  <div class="g2">
+    <div class="fl" style="margin:0"><div class="fl-l">Salary range</div><input class="fi" id="rq-sal" placeholder="$150k – $180k"></div>
+    <div class="fl" style="margin:0"><div class="fl-l">Location</div><input class="fi" id="rq-loc" placeholder="Reston, VA"></div>
+  </div>
+  <div class="fl"><div class="fl-l">JD Link (URL)</div><input class="fi" id="rq-jd" type="url" placeholder="https://..."></div>
+  <div class="fl"><div class="fl-l">Notes</div><textarea class="fi" id="rq-notes" style="height:52px;resize:none;"></textarea></div>
+  <div class="ma"><button class="btn" onclick="closeReqM()">Cancel</button><button class="btn pri" onclick="saveReq()">Save req</button></div>
+</div></div>
+
+<!-- SUB MODAL -->
+<div class="mbg" id="mSub">
+<div class="modal">
+  <div class="mt" id="mSub-t">Add submission</div>
+  <div class="g2">
+    <div class="fl" style="margin:0"><div class="fl-l">Candidate name</div><input class="fi" id="s-name" placeholder="Full name"></div>
+    <div class="fl" style="margin:0"><div class="fl-l">Client</div><select class="fi" id="s-co" onchange="fillReqDrop()"></select></div>
+  </div>
+  <div class="fl"><div class="fl-l">Req / Role</div><select class="fi" id="s-req"></select></div>
+  <div class="g2">
+    <div class="fl" style="margin:0"><div class="fl-l">Recruiter</div><select class="fi" id="s-rec"></select></div>
+    <div class="fl" style="margin:0"><div class="fl-l">Status</div>
+      <select class="fi" id="s-stage">
+        <option value="submitted">Submitted</option><option value="screening">Screening</option>
+        <option value="interview_pm">Interview – PM</option><option value="interview_client">Interview – Client</option>
+        <option value="offer">Offer</option><option value="placed">Placed</option>
+        <option value="pass">Pass</option><option value="declined">Declined</option>
+      </select>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="fl" style="margin:0"><div class="fl-l">Clearance</div>
+      <select class="fi" id="s-clr"><option value="">— select —</option><option>TS/SCI with CI poly</option><option>TS/SCI with Full Scope Poly</option><option>TS/SCI</option><option>TS</option><option>Secret</option><option>Public Trust</option><option>FSP requirements</option></select>
+    </div>
+    <div class="fl" style="margin:0"><div class="fl-l">Date submitted</div><input class="fi" id="s-date" type="date"></div>
+  </div>
+  <div class="fl"><div class="fl-l">Notes</div><textarea class="fi" id="s-notes" style="height:50px;resize:none;"></textarea></div>
+  <div class="fl"><div class="fl-l">Resume text (paste from PDF or Word)</div><textarea class="fi" id="s-resume" style="height:80px;resize:vertical;" placeholder="Paste resume here..."></textarea></div>
+  <div class="ma"><button class="btn" onclick="closeSubM()">Cancel</button><button class="btn pri" onclick="saveSub()">Save submission</button></div>
+</div></div>
+
+<!-- JD MODAL -->
+<div class="mbg" id="mJD">
+<div class="modal wide">
+  <div class="mt" id="mJD-t">Job Description</div>
+  <div class="g2">
+    <div class="fl" style="margin:0"><div class="fl-l">Company</div><input class="fi" id="jd-co"></div>
+    <div class="fl" style="margin:0"><div class="fl-l">Role</div><input class="fi" id="jd-role"></div>
+  </div>
+  <div class="g2">
+    <div class="fl" style="margin:0"><div class="fl-l">Clearance</div>
+      <select class="fi" id="jd-clr"><option value="">—</option><option>TS/SCI with CI poly</option><option>TS/SCI with Full Scope Poly</option><option>TS/SCI</option><option>TS</option><option>Secret</option><option>Public Trust</option><option>FSP requirements</option></select>
+    </div>
+    <div class="fl" style="margin:0"><div class="fl-l">Salary</div><input class="fi" id="jd-sal"></div>
+  </div>
+  <div class="fl"><div class="fl-l">External URL</div><input class="fi" id="jd-url" type="url" placeholder="https://..."></div>
+  <div class="fl"><div class="fl-l">Job Description</div><textarea class="fi" id="jd-body" style="height:200px;resize:vertical;"></textarea></div>
+  <div class="ma"><button class="btn" onclick="closeMBG('mJD')">Cancel</button><button class="btn pri" onclick="saveJD()">Save</button></div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONSTANTS ──────────────────────────────────────────────
+const STAGES=[
+  {id:'submitted',  label:'Submitted',       bg:'#E6F1FB',text:'#0C447C'},
+  {id:'screening',  label:'Screening',       bg:'#FAEEDA',text:'#633806'},
+  {id:'interview_pm',label:'Interview – PM', bg:'#EEEDFE',text:'#3C3489'},
+  {id:'interview_client',label:'Interview – Client',bg:'#FBEAF0',text:'#72243E'},
+  {id:'offer',      label:'Offer',           bg:'#EAF3DE',text:'#27500A'},
+  {id:'placed',     label:'Placed',          bg:'#E1F5EE',text:'#085041'},
+  {id:'pass',       label:'Pass',            bg:'#F1EFE8',text:'#444441'},
+  {id:'declined',   label:'Declined',        bg:'#FCEBEB',text:'#791F1F'},
+];
+const RSTAGES=[
+  {id:'priority',label:'Priority',bg:'#FAEEDA',text:'#633806'},
+  {id:'active',  label:'Active',  bg:'#E6F1FB',text:'#0C447C'},
+  {id:'hold',    label:'Hold',    bg:'#F1EFE8',text:'#444441'},
+];
+
+// ── DATA ──────────────────────────────────────────────────
+// Pure in-memory — no localStorage
+const db={
+  recruiters:['Peter','Melizza','Nisha','Jessi'],
+  reqs:[],
+  subs:[],
+  jds:[],
+  notes:{} // {subId:[{note,author,date}]}
+};
+
+// ── STATE ─────────────────────────────────────────────────
+let page='reqs', filterCo='all', sortBy='date', sortDir='desc';
+let charts=[], editReqId=null, editSubId=null, editJDId=null;
+
+// ── UTILS ─────────────────────────────────────────────────
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const today=()=>new Date().toISOString().split('T')[0];
+const stg=id=>STAGES.find(s=>s.id===id)||STAGES[0];
+const rstg=id=>RSTAGES.find(s=>s.id===id)||RSTAGES[1];
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+function gv(id){const e=document.getElementById(id);return e?e.value:'';}
+function fmtDate(d){if(!d)return'—';try{return new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'});}catch{return d;}}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+function killCharts(){charts.forEach(c=>{try{c.destroy();}catch{}});charts=[];}
+function avCol(n){const bs=['#EEEDFE','#E6F1FB','#E1F5EE','#FAEEDA','#FAECE7','#EAF3DE'],ts=['#3C3489','#0C447C','#085041','#633806','#993C1D','#27500A'],i=(n&&n.charCodeAt?n.charCodeAt(0):0)%bs.length;return{bg:bs[i],text:ts[i]};}
+function initials(n){const p=(n||'').trim().split(' ');return((p[0]||'')[0]||'').toUpperCase()+((p[p.length-1]||'')[0]||'').toUpperCase();}
+function allClients(){return[...new Set([...db.reqs.map(r=>r.client),...db.subs.map(s=>s.client)].filter(Boolean))].sort();}
+function subsForReq(r){return db.subs.filter(s=>s.req_id===r.id||(s.client===r.client&&s.role&&r.role&&s.role.toLowerCase().startsWith(r.role.split(' ')[0].toLowerCase())));}
+function activeSubs(r){return subsForReq(r).filter(s=>!['pass','declined'].includes(s.stage));}
+function placedSubs(r){return subsForReq(r).filter(s=>s.stage==='placed');}
+function closeMBG(id){document.getElementById(id).classList.remove('open');}
+
+// ── ROUTING ───────────────────────────────────────────────
+function go(p,el){
+  page=p; filterCo='all';
+  document.querySelectorAll('.ni').forEach(x=>x.classList.remove('on'));
+  if(el)el.classList.add('on');
+  const btn=document.getElementById('top-btn');
+  const isReq=['reqs','biz','cfg'].includes(p);
+  btn.textContent=isReq?'+ Add req':'+ Add submission';
+  btn.onclick=isReq?openReqM:openSubM;
+  closePanel();
+  renderAll();
+}
+function setFilter(c,el){
+  filterCo=c;
+  document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  renderContent();
+}
+function quickFilter(c,el){
+  filterCo=c;
+  document.querySelectorAll('.ni,.ftab').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');
+  renderAll();
+}
+function setSort(s,el){
+  if(sortBy===s)sortDir=sortDir==='asc'?'desc':'asc'; else{sortBy=s;sortDir='desc';}
+  document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  renderContent();
+}
+
+// ── RENDER ALL ────────────────────────────────────────────
+function renderAll(){
+  // sidebar badges
+  document.getElementById('b-reqs').textContent=db.reqs.filter(r=>r.status!=='hold').length;
+  document.getElementById('b-tot').textContent=db.subs.filter(s=>!['pass','declined'].includes(s.stage)).length;
+  document.getElementById('b-arch').textContent=db.subs.filter(s=>['pass','declined'].includes(s.stage)).length;
+  // sidebar clients
+  const ac=allClients();
+  document.getElementById('sb-clients').innerHTML=ac.map(c=>{
+    const rc=db.reqs.filter(r=>r.client===c).length, sc=db.subs.filter(s=>s.client===c).length;
+    return`<div class="ni" onclick="quickFilter(${JSON.stringify(c)},this)"><span class="ni-ic" style="font-size:8px;">&#9679;</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;">${esc(c)}</span><span class="ni-badge">${rc}r ${sc}s</span></div>`;
+  }).join('');
+  // rec filter
+  const rf=document.getElementById('rec-f'), rv=rf.value;
+  rf.innerHTML='<option value="">All recruiters</option>'+db.recruiters.map(r=>`<option value="${esc(r)}"${r===rv?' selected':''}>${esc(r)}</option>`).join('');
+  // stats
+  renderStats();
+  // sort bar
+  document.getElementById('sort-bar').style.display=['list','arch'].includes(page)?'flex':'none';
+  // tabs
+  renderTabs();
+  // content
+  renderContent();
+}
+
+function renderStats(){
+  const sb=document.getElementById('stats-bar');
+  if(page==='reqs'){
+    const pr=db.reqs.filter(r=>r.status==='priority').length;
+    const ac=db.reqs.filter(r=>r.status==='active').length;
+    const ho=db.reqs.filter(r=>r.status==='hold').length;
+    const ts=db.reqs.filter(r=>r.status!=='hold').reduce((a,r)=>a+(+r.seats||1),0);
+    const fi=db.reqs.reduce((a,r)=>a+placedSubs(r).length,0);
+    sb.innerHTML=`
+      <div class="sc"><div class="sc-l">Priority</div><div class="sc-v" style="color:#633806;">${pr}</div></div>
+      <div class="sc"><div class="sc-l">Active</div><div class="sc-v">${ac}</div></div>
+      <div class="sc"><div class="sc-l">On hold</div><div class="sc-v" style="color:var(--t3);">${ho}</div></div>
+      <div class="sc"><div class="sc-l">Open seats</div><div class="sc-v">${ts}</div></div>
+      <div class="sc"><div class="sc-l">Filled</div><div class="sc-v" style="color:#085041;">${fi}</div></div>
+      <div style="margin-bottom:8px;"></div>`;
+  } else if(['board','list'].includes(page)){
+    const f=filteredSubs(false);
+    const pl=f.filter(s=>s.stage==='placed').length;
+    const ac=f.filter(s=>!['placed','pass','declined'].includes(s.stage)).length;
+    const iv=f.filter(s=>['interview_pm','interview_client'].includes(s.stage)).length;
+    const of=f.filter(s=>s.stage==='offer').length;
+    sb.innerHTML=`
+      <div class="sc"><div class="sc-l">Total</div><div class="sc-v">${f.length}</div></div>
+      <div class="sc"><div class="sc-l">Active</div><div class="sc-v">${ac}</div></div>
+      <div class="sc"><div class="sc-l">Interviewing</div><div class="sc-v">${iv}</div></div>
+      <div class="sc"><div class="sc-l">Offers</div><div class="sc-v">${of}</div></div>
+      <div class="sc"><div class="sc-l">Placed</div><div class="sc-v">${pl}</div></div>
+      <div style="margin-bottom:8px;"></div>`;
+  } else if(page==='arch'){
+    const f=filteredSubs(true);
+    sb.innerHTML=`
+      <div class="sc"><div class="sc-l">Archived</div><div class="sc-v">${f.length}</div></div>
+      <div class="sc"><div class="sc-l">Pass</div><div class="sc-v">${f.filter(s=>s.stage==='pass').length}</div></div>
+      <div class="sc"><div class="sc-l">Declined</div><div class="sc-v">${f.filter(s=>s.stage==='declined').length}</div></div>
+      <div style="margin-bottom:8px;"></div>`;
+  } else {
+    sb.innerHTML='';
+  }
+}
+
+function renderTabs(){
+  const area=document.getElementById('ftabs');
+  if(['reqs','board','list','arch'].includes(page)){
+    const ac=allClients();
+    area.style.display='flex';
+    area.innerHTML=`<div class="ftab on" onclick="setFilter('all',this)">All clients</div>`+
+      ac.map(c=>`<div class="ftab" onclick="setFilter(${JSON.stringify(c)},this)">${esc(c)}</div>`).join('');
+    if(filterCo!=='all'){
+      area.querySelectorAll('.ftab').forEach(t=>{
+        if(t.textContent===filterCo){t.classList.add('on');area.querySelector('.ftab').classList.remove('on');}
+      });
+    }
+  } else {
+    area.style.display='none';
+  }
+}
+
+// ── FILTERS ───────────────────────────────────────────────
+function filteredReqs(){
+  const q=gv('srch').toLowerCase(), rec=gv('rec-f');
+  return db.reqs.filter(r=>
+    (filterCo==='all'||r.client===filterCo)&&
+    (!rec||r.recruiter===rec)&&
+    (!q||(r.role||'').toLowerCase().includes(q)||(r.client||'').toLowerCase().includes(q)||(r.reqid||'').toLowerCase().includes(q))
+  );
+}
+function filteredSubs(archive){
+  const q=gv('srch').toLowerCase(), rec=gv('rec-f');
+  let list=db.subs.filter(s=>{
+    const isArch=['pass','declined'].includes(s.stage);
+    if(archive!==isArch)return false;
+    return(filterCo==='all'||s.client===filterCo)&&
+      (!rec||s.recruiter===rec)&&
+      (!q||(s.name||'').toLowerCase().includes(q)||(s.role||'').toLowerCase().includes(q)||(s.client||'').toLowerCase().includes(q)||(s.clearance||'').toLowerCase().includes(q));
+  });
+  const dir=sortDir==='asc'?1:-1;
+  list.sort((a,b)=>((a[sortBy]||'')>(b[sortBy]||'')?dir:-dir));
+  return list;
+}
+
+// ── RENDER CONTENT ────────────────────────────────────────
+function renderContent(){
+  killCharts();
+  const a=document.getElementById('va');
+  const fn={reqs:drawReqs,board:drawBoard,list:()=>drawList(a,false),arch:()=>drawList(a,true),biz:()=>drawBiz(a),team:()=>drawTeam(a),cfg:()=>drawCfg(a)};
+  (fn[page]||fn.reqs)(a);
+}
+
+// ── REQS BOARD ────────────────────────────────────────────
+function drawReqs(a){
+  document.getElementById('pg-title').textContent='Open requisitions';
+  a.style.overflow='hidden';
+  a.innerHTML='<div class="kb-wrap"><div class="kanban" id="kb"></div></div>';
+  const board=document.getElementById('kb');
+  const f=filteredReqs();
+  RSTAGES.forEach(rs=>{
+    const cards=f.filter(r=>r.status===rs.id);
+    const col=document.createElement('div');
+    col.className='kcol '+(rs.id==='priority'?'kcol-w':'kcol-m');
+    col.innerHTML=`<div class="kch" style="background:${rs.bg};"><span class="kch-lbl" style="color:${rs.text};">${rs.label}</span><span class="kch-cnt" style="color:${rs.text};">${cards.length} req${cards.length!==1?'s':''}</span></div><div class="kcb"></div>`;
+    board.appendChild(col);
+    const body=col.querySelector('.kcb');
+    if(!cards.length){body.innerHTML='<div class="empty-col">No reqs</div>';return;}
+    cards.forEach(r=>{
+      const active=activeSubs(r), placed=placedSubs(r);
+      const seats=+r.seats||1;
+      const pct=Math.min(Math.round((placed.length/seats)*100),100);
+      const pc=pct>=100?'#1D9E75':pct>=50?'#BA7517':'#378ADD';
+      const el=document.createElement('div');
+      el.className='rcard'+(rs.id==='priority'?' pr':'');
+      el.onclick=()=>openReqPanel(r.id);
+      el.innerHTML=`
+        <div class="rc-co">${esc(r.client)}</div>
+        <div class="rc-role">${esc(r.role)}</div>
+        ${r.clearance?`<div class="rc-det"><span>Clearance:</span> ${esc(r.clearance)}</div>`:''}
+        ${r.salary?`<div class="rc-det"><span>Salary:</span> ${esc(r.salary)}</div>`:''}
+        ${r.recruiter?`<div class="rc-det"><span>Recruiter:</span> ${esc(r.recruiter)}</div>`:'<div class="rc-det" style="color:#D85A30;">Unassigned</div>'}
+        ${r.location?`<div class="rc-det"><span>Location:</span> ${esc(r.location)}</div>`:''}
+        <div class="prog-wrap">
+          <div class="prog-lbl"><span>${active.length} in play</span><span>${placed.length} / ${seats} filled</span></div>
+          <div class="prog-track"><div class="prog-fill" style="width:${pct}%;background:${pc};"></div></div>
+        </div>
+        ${r.reqid?`<div style="margin-top:5px;"><span class="pill" style="background:#E6F1FB;color:#0C447C;">Req ${esc(r.reqid)}</span></div>`:''}`;
+      body.appendChild(el);
+    });
+  });
+}
+
+function openReqPanel(id){
+  const r=db.reqs.find(x=>x.id===id); if(!r)return;
+  const rs=rstg(r.status), active=activeSubs(r), placed=placedSubs(r);
+  document.getElementById('p-name').textContent=r.role;
+  document.getElementById('p-sub').textContent=r.client+(r.reqid?' · Req '+r.reqid:'');
+  document.getElementById('p-body').innerHTML=`
+    <div class="psec"><div class="psec-t">Details</div>
+      <div class="ir"><span class="ir-l">Status</span><span class="ir-v"><span class="pill" style="background:${rs.bg};color:${rs.text};">${rs.label}</span></span></div>
+      <div class="ir"><span class="ir-l">Seats</span><span class="ir-v">${+r.seats||1}</span></div>
+      <div class="ir"><span class="ir-l">Filled</span><span class="ir-v" style="color:#085041;">${placed.length}</span></div>
+      <div class="ir"><span class="ir-l">Clearance</span><span class="ir-v">${esc(r.clearance)||'—'}</span></div>
+      <div class="ir"><span class="ir-l">Salary</span><span class="ir-v">${esc(r.salary)||'—'}</span></div>
+      <div class="ir"><span class="ir-l">Location</span><span class="ir-v">${esc(r.location)||'—'}</span></div>
+      <div class="ir"><span class="ir-l">Recruiter</span><span class="ir-v">${esc(r.recruiter)||'Unassigned'}</span></div>
+      ${r.reqid?`<div class="ir"><span class="ir-l">Req ID</span><span class="ir-v">${esc(r.reqid)}</span></div>`:''}
+      ${r.jd?`<div class="ir"><span class="ir-l">Job Description</span><span class="ir-v"><a href="${esc(r.jd)}" target="_blank" style="color:#0C447C;">View &#8599;</a></span></div>`:''}
+    </div>
+    <div class="psec"><div class="psec-t">Move to status</div>
+      <select class="fi" id="rq-status-panel" onchange="changeReqStatus('${id}',this.value)">
+        ${RSTAGES.map(s=>`<option value="${s.id}"${s.id===r.status?' selected':''}>${s.label}</option>`).join('')}
+      </select>
+    </div>
+    <div class="psec" style="display:flex;gap:6px;">
+      <button class="btn sm" onclick="editReq('${id}')">Edit req</button>
+      <button class="btn sm dng" onclick="delReq('${id}')">Delete</button>
+    </div>
+    ${r.notes?`<div class="psec"><div class="psec-t">Notes</div><div style="font-size:12px;color:var(--t2);line-height:1.6;">${esc(r.notes)}</div></div>`:''}
+    <div class="psec">
+      <div class="psec-t">Candidates in play (${active.length})</div>
+      ${active.length===0?'<div style="font-size:12px;color:var(--t3);padding:6px 0;">No submissions yet.</div>':''}
+      ${active.map(s=>{const st=stg(s.stage),av=avCol(s.name);return`<div class="cand-row"><div class="av" style="width:24px;height:24px;background:${av.bg};color:${av.text};">${initials(s.name)}</div><div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(s.name)}</div><div style="font-size:11px;color:var(--t3);">${esc(s.recruiter)||''} · ${fmtDate(s.date)}</div></div><span class="pill" style="background:${st.bg};color:${st.text};">${st.label}</span></div>`;}).join('')}
+    </div>
+    <button class="btn pri sm" onclick="openSubM()">+ Submit candidate</button>`;
+  openPanel();
+}
+
+function changeReqStatus(id,ns){
+  const r=db.reqs.find(x=>x.id===id); if(r)r.status=ns;
+  toast('Status updated'); renderAll(); openReqPanel(id);
+}
+function delReq(id){
+  if(!confirm('Delete this req?'))return;
+  db.reqs=db.reqs.filter(r=>r.id!==id);
+  closePanel(); toast('Req deleted'); renderAll();
+}
+
+// ── SUB BOARD ─────────────────────────────────────────────
+function drawBoard(a){
+  document.getElementById('pg-title').textContent='Submission pipeline';
+  a.style.overflow='hidden';
+  a.innerHTML='<div class="kb-wrap"><div class="kanban" id="kb"></div></div>';
+  const board=document.getElementById('kb');
+  const f=filteredSubs(false);
+  ['submitted','screening','interview_pm','interview_client','offer','placed'].forEach(sid=>{
+    const stage=stg(sid), cards=f.filter(s=>s.stage===sid);
+    const col=document.createElement('div');
+    col.className='kcol kcol-m';
+    col.innerHTML=`<div class="kch" style="background:${stage.bg};"><span class="kch-lbl" style="color:${stage.text};">${stage.label}</span><span class="kch-cnt" style="color:${stage.text};">${cards.length}</span></div><div class="kcb"></div>`;
+    board.appendChild(col);
+    const body=col.querySelector('.kcb');
+    if(!cards.length){body.innerHTML='<div class="empty-col">None</div>';return;}
+    cards.forEach(s=>{
+      const av=avCol(s.name);
+      const el=document.createElement('div');
+      el.className='rcard'; el.onclick=()=>openSubPanel(s.id);
+      el.innerHTML=`
+        <div style="display:flex;align-items:flex-start;gap:7px;margin-bottom:7px;">
+          <div class="av" style="width:24px;height:24px;background:${av.bg};color:${av.text};">${initials(s.name)}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(s.name)}</div>
+            <div style="font-size:11px;color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(s.role)}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:4px;">
+          <span class="pill" style="background:#E6F1FB;color:#0C447C;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(s.client)}</span>
+          <span style="font-size:10px;color:var(--t3);">${fmtDate(s.date)}</span>
+        </div>
+        ${s.clearance?`<div style="font-size:10px;color:var(--t3);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(s.clearance)}</div>`:''}
+        ${s.resume_text?'<div style="margin-top:4px;"><span class="has-resume">Resume on file</span></div>':''}`;
+      body.appendChild(el);
+    });
+  });
+}
+
+// ── SUB LIST ──────────────────────────────────────────────
+function drawList(a,isArch){
+  document.getElementById('pg-title').textContent=isArch?'Candidate archive':'All submissions';
+  a.style.overflow='auto';
+  const f=filteredSubs(isArch);
+  a.innerHTML=`<div class="list-wrap">
+    <table><thead><tr>
+      <th>Candidate</th><th>Client</th>
+      <th onclick="setSort('role',this)">Role &#8597;</th>
+      <th onclick="setSort('stage',this)">Status &#8597;</th>
+      <th>Recruiter</th>
+      <th onclick="setSort('clearance',this)">Clearance &#8597;</th>
+      <th onclick="setSort('date',this)">Date &#8597;</th>
+      <th>Resume</th>
+    </tr></thead><tbody id="tbl-body"></tbody></table>
+  </div>`;
+  const tbody=document.getElementById('tbl-body');
+  if(!f.length){
+    tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--t3);">No candidates found</td></tr>`;
+    return;
+  }
+  f.forEach(s=>{
+    const av=avCol(s.name), st=stg(s.stage);
+    const tr=document.createElement('tr');
+    tr.onclick=()=>openSubPanel(s.id);
+    tr.innerHTML=`
+      <td><div style="display:flex;align-items:center;gap:7px;"><div class="av" style="width:26px;height:26px;background:${av.bg};color:${av.text};">${initials(s.name)}</div><span style="font-weight:600;">${esc(s.name)}</span></div></td>
+      <td style="color:var(--t2);max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(s.client)}</td>
+      <td style="color:var(--t2);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(s.role)}</td>
+      <td><span class="pill" style="background:${st.bg};color:${st.text};">${st.label}</span></td>
+      <td style="color:var(--t2);">${esc(s.recruiter)||'—'}</td>
+      <td style="font-size:11px;color:var(--t2);max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(s.clearance)||'—'}</td>
+      <td style="color:var(--t3);white-space:nowrap;">${fmtDate(s.date)}</td>
+      <td>${s.resume_text?'<span class="has-resume">On file</span>':'<span style="font-size:10px;color:var(--t3);">—</span>'}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ── SUB PANEL ─────────────────────────────────────────────
+function openSubPanel(id){
+  const s=db.subs.find(x=>x.id===id); if(!s)return;
+  const nl=db.notes[id]||[];
+  document.getElementById('p-name').textContent=s.name;
+  document.getElementById('p-sub').textContent=(s.role||'')+(s.client?' · '+s.client:'');
+  document.getElementById('p-body').innerHTML=`
+    <div class="psec"><div class="psec-t">Details</div>
+      <div class="ir"><span class="ir-l">Client</span><span class="ir-v">${esc(s.client)}</span></div>
+      <div class="ir"><span class="ir-l">Recruiter</span><span class="ir-v">${esc(s.recruiter)||'—'}</span></div>
+      <div class="ir"><span class="ir-l">Clearance</span><span class="ir-v">${esc(s.clearance)||'—'}</span></div>
+      <div class="ir"><span class="ir-l">Salary</span><span class="ir-v">${esc(s.salary)||'—'}</span></div>
+      <div class="ir"><span class="ir-l">Date submitted</span><span class="ir-v">${fmtDate(s.date)}</span></div>
+    </div>
+    <div class="psec"><div class="psec-t">Status</div>
+      <select class="fi" onchange="changeSubStage('${id}',this.value)">
+        ${STAGES.map(x=>`<option value="${x.id}"${x.id===s.stage?' selected':''}>${x.label}</option>`).join('')}
+      </select>
+      ${!['pass','declined'].includes(s.stage)?`<button class="btn sm dng" style="margin-top:7px;" onclick="archiveSub('${id}')">Move to archive</button>`:''}
+    </div>
+    <div class="psec" style="display:flex;gap:6px;">
+      <button class="btn sm" onclick="editSub('${id}')">Edit</button>
+      <button class="btn sm dng" onclick="delSub('${id}')">Delete</button>
+    </div>
+    <div class="psec">
+      <div class="psec-t">Notes (${nl.length})</div>
+      <div id="notes-list">
+        ${nl.length===0?'<div style="font-size:12px;color:var(--t3);margin-bottom:8px;">No notes yet.</div>':''}
+        ${nl.map((n,i)=>`<div class="note-item"><div class="note-text">${esc(n.note)}</div><div class="note-meta">${esc(n.author)} · ${n.date} <button onclick="delNote('${id}',${i})" style="margin-left:8px;font-size:10px;color:#D85A30;border:none;background:none;cursor:pointer;">remove</button></div></div>`).join('')}
+      </div>
+      <textarea class="fi" id="note-txt" style="height:60px;resize:none;margin-bottom:6px;" placeholder="Add a note..."></textarea>
+      <div style="display:flex;gap:6px;">
+        <input class="fi" id="note-auth" placeholder="Your name" style="font-size:11px;">
+        <button class="btn pri sm" onclick="addNote('${id}')">Save</button>
+      </div>
+    </div>
+    <div class="psec">
+      <div class="psec-t">Resume</div>
+      ${s.resume_text
+        ?`<div class="resume-box" id="res-box">${esc(s.resume_text)}</div><button class="btn sm" style="margin-top:7px;" onclick="editResume('${id}')">Edit</button>`
+        :`<textarea class="fi" id="res-inp-${id}" style="height:110px;resize:vertical;" placeholder="Paste resume text here..."></textarea><button class="btn pri sm" style="margin-top:6px;" onclick="saveResume('${id}')">Save resume</button>`}
+    </div>`;
+  openPanel();
+}
+
+function changeSubStage(id,ns){
+  const s=db.subs.find(x=>x.id===id); if(s)s.stage=ns;
+  toast('Status updated'); renderAll(); openSubPanel(id);
+}
+function archiveSub(id){
+  const s=db.subs.find(x=>x.id===id); if(s)s.stage='pass';
+  toast('Moved to archive'); closePanel(); renderAll();
+}
+function delSub(id){
+  if(!confirm('Delete this submission?'))return;
+  db.subs=db.subs.filter(s=>s.id!==id);
+  closePanel(); toast('Deleted'); renderAll();
+}
+function addNote(id){
+  const txt=(document.getElementById('note-txt')||{}).value?.trim();
+  const auth=(document.getElementById('note-auth')||{}).value?.trim()||'Team';
+  if(!txt)return;
+  if(!db.notes[id])db.notes[id]=[];
+  db.notes[id].unshift({note:txt,author:auth,date:today()});
+  toast('Note saved'); openSubPanel(id);
+}
+function delNote(id,idx){
+  if(!db.notes[id])return;
+  db.notes[id].splice(idx,1);
+  openSubPanel(id);
+}
+function editResume(id){
+  const s=db.subs.find(x=>x.id===id); if(!s)return;
+  const box=document.getElementById('res-box'); if(!box)return;
+  const p=box.parentNode; box.remove(); p.querySelector('.btn')?.remove();
+  p.insertAdjacentHTML('beforeend',`<textarea class="fi" id="res-inp-${id}" style="height:110px;resize:vertical;">${esc(s.resume_text)}</textarea><button class="btn pri sm" style="margin-top:6px;" onclick="saveResume('${id}')">Save resume</button>`);
+}
+function saveResume(id){
+  const ta=document.getElementById('res-inp-'+id); if(!ta)return;
+  const s=db.subs.find(x=>x.id===id); if(s)s.resume_text=ta.value.trim();
+  toast('Resume saved'); openSubPanel(id);
+}
+
+// ── PANEL HELPERS ─────────────────────────────────────────
+function openPanel(){document.getElementById('panel').classList.add('open');document.getElementById('overlay').classList.add('open');}
+function closePanel(){document.getElementById('panel').classList.remove('open');document.getElementById('overlay').classList.remove('open');}
+
+// ── REQ MODAL ─────────────────────────────────────────────
+function openReqM(){
+  editReqId=null;
+  document.getElementById('mReq-t').textContent='Add requisition';
+  ['rq-co','rq-role','rq-rid','rq-sal','rq-loc','rq-jd','rq-notes'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('rq-seats').value='1';
+  document.getElementById('rq-st').value='active';
+  document.getElementById('rq-clr').value='';
+  document.getElementById('rq-rec').innerHTML='<option value="">Unassigned</option>'+db.recruiters.map(r=>`<option>${esc(r)}</option>`).join('');
+  document.getElementById('co-dl').innerHTML=allClients().map(c=>`<option value="${esc(c)}">`).join('');
+  document.getElementById('mReq').classList.add('open');
+}
+function editReq(id){
+  const r=db.reqs.find(x=>x.id===id); if(!r)return;
+  editReqId=id;
+  document.getElementById('mReq-t').textContent='Edit requisition';
+  document.getElementById('rq-co').value=r.client||'';
+  document.getElementById('rq-st').value=r.status||'active';
+  document.getElementById('rq-role').value=r.role||'';
+  document.getElementById('rq-seats').value=r.seats||1;
+  document.getElementById('rq-rid').value=r.reqid||'';
+  document.getElementById('rq-sal').value=r.salary||'';
+  document.getElementById('rq-loc').value=r.location||'';
+  document.getElementById('rq-jd').value=r.jd||'';
+  document.getElementById('rq-notes').value=r.notes||'';
+  document.getElementById('rq-clr').value=r.clearance||'';
+  document.getElementById('rq-rec').innerHTML='<option value="">Unassigned</option>'+db.recruiters.map(re=>`<option${re===r.recruiter?' selected':''}>${esc(re)}</option>`).join('');
+  document.getElementById('mReq').classList.add('open');
+}
+function closeReqM(){closeMBG('mReq');editReqId=null;}
+document.getElementById('mReq').addEventListener('click',e=>{if(e.target===e.currentTarget)closeReqM();});
+function saveReq(){
+  const role=gv('rq-role').trim(); if(!role){toast('Role is required');return;}
+  const obj={
+    client:gv('rq-co').trim(), role, status:gv('rq-st'),
+    seats:parseInt(gv('rq-seats'))||1, reqid:gv('rq-rid').trim(),
+    recruiter:gv('rq-rec'), clearance:gv('rq-clr'),
+    salary:gv('rq-sal').trim(), location:gv('rq-loc').trim(),
+    jd:gv('rq-jd').trim(), notes:gv('rq-notes').trim()
+  };
+  if(editReqId){Object.assign(db.reqs.find(x=>x.id===editReqId),obj);}
+  else{db.reqs.unshift({id:uid(),...obj});}
+  closeReqM(); toast(editReqId?'Req updated':'Req added'); renderAll();
+}
+
+// ── SUB MODAL ─────────────────────────────────────────────
+function fillReqDrop(){
+  const co=gv('s-co');
+  const cr=db.reqs.filter(r=>r.client===co);
+  document.getElementById('s-req').innerHTML=`<option value="">— select req —</option>`+cr.map(r=>`<option value="${r.id}">${esc(r.role)}${r.reqid?' ('+r.reqid+')':''}</option>`).join('');
+}
+function openSubM(){
+  editSubId=null;
+  document.getElementById('mSub-t').textContent='Add submission';
+  ['s-name','s-notes','s-resume'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('s-date').value=today();
+  document.getElementById('s-stage').value='submitted';
+  document.getElementById('s-clr').value='';
+  const co=document.getElementById('s-co');
+  co.innerHTML=allClients().map(c=>`<option>${esc(c)}</option>`).join('');
+  document.getElementById('s-rec').innerHTML=db.recruiters.map(r=>`<option>${esc(r)}</option>`).join('');
+  fillReqDrop();
+  document.getElementById('mSub').classList.add('open');
+}
+function editSub(id){
+  const s=db.subs.find(x=>x.id===id); if(!s)return;
+  editSubId=id;
+  document.getElementById('mSub-t').textContent='Edit submission';
+  document.getElementById('s-name').value=s.name||'';
+  document.getElementById('s-date').value=s.date||today();
+  document.getElementById('s-stage').value=s.stage||'submitted';
+  document.getElementById('s-clr').value=s.clearance||'';
+  document.getElementById('s-notes').value=s.notes||'';
+  document.getElementById('s-resume').value=s.resume_text||'';
+  const co=document.getElementById('s-co');
+  co.innerHTML=allClients().map(c=>`<option${c===s.client?' selected':''}>${esc(c)}</option>`).join('');
+  document.getElementById('s-rec').innerHTML=db.recruiters.map(r=>`<option${r===s.recruiter?' selected':''}>${esc(r)}</option>`).join('');
+  fillReqDrop();
+  document.getElementById('mSub').classList.add('open');
+}
+function closeSubM(){closeMBG('mSub');editSubId=null;}
+document.getElementById('mSub').addEventListener('click',e=>{if(e.target===e.currentTarget)closeSubM();});
+function saveSub(){
+  const name=gv('s-name').trim(); if(!name){toast('Candidate name required');return;}
+  const co=gv('s-co'), reqId=gv('s-req'), req=db.reqs.find(r=>r.id===reqId);
+  const obj={
+    name, client:co, role:req?req.role:'', req_id:reqId||null,
+    stage:gv('s-stage'), recruiter:gv('s-rec'),
+    clearance:gv('s-clr')||(req?req.clearance:''),
+    salary:req?req.salary:'', date:gv('s-date'),
+    notes:gv('s-notes').trim(), resume_text:gv('s-resume').trim()
+  };
+  if(editSubId){Object.assign(db.subs.find(x=>x.id===editSubId),obj);}
+  else{db.subs.unshift({id:uid(),...obj});}
+  closeSubM(); toast(editSubId?'Updated':'Submission added'); renderAll();
+}
+
+// ── JD MODAL ─────────────────────────────────────────────
+function openJDM(id){
+  editJDId=id||null;
+  const jd=id?db.jds.find(x=>x.id===id):null;
+  document.getElementById('mJD-t').textContent=id?'Edit Job Description':'Add Job Description';
+  document.getElementById('jd-co').value=jd?.company||'';
+  document.getElementById('jd-role').value=jd?.role||'';
+  document.getElementById('jd-clr').value=jd?.clearance||'';
+  document.getElementById('jd-sal').value=jd?.salary||'';
+  document.getElementById('jd-url').value=jd?.url||'';
+  document.getElementById('jd-body').value=jd?.body||'';
+  document.getElementById('mJD').classList.add('open');
+}
+document.getElementById('mJD').addEventListener('click',e=>{if(e.target===e.currentTarget)closeMBG('mJD');});
+function saveJD(){
+  const co=gv('jd-co').trim(), role=gv('jd-role').trim();
+  if(!co||!role){toast('Company and role required');return;}
+  const obj={company:co,role,clearance:gv('jd-clr'),salary:gv('jd-sal').trim(),url:gv('jd-url').trim(),body:gv('jd-body').trim()};
+  if(editJDId){Object.assign(db.jds.find(x=>x.id===editJDId),obj);}
+  else{db.jds.push({id:uid(),...obj});}
+  closeMBG('mJD'); toast('Saved');
+  if(page==='cfg')renderContent();
+}
+function delJD(id){
+  if(!confirm('Delete this JD?'))return;
+  db.jds=db.jds.filter(x=>x.id!==id);
+  toast('Deleted'); renderContent();
+}
+
+// ── REPORTS ───────────────────────────────────────────────
+function drawBiz(a){
+  document.getElementById('pg-title').textContent='Business reporting';
+  a.style.overflow='auto';
+  const ac=allClients();
+  const ts=db.reqs.filter(r=>r.status!=='hold').reduce((s,r)=>s+(+r.seats||1),0);
+  const fi=db.reqs.reduce((s,r)=>s+placedSubs(r).length,0);
+  const fr=ts>0?Math.round((fi/ts)*100):0;
+  a.innerHTML=`<div class="rep-wrap">
+    <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px;margin-bottom:20px;">
+      <div class="sc"><div class="sc-l">Open reqs</div><div class="sc-v">${db.reqs.filter(r=>r.status!=='hold').length}</div></div>
+      <div class="sc"><div class="sc-l">Open seats</div><div class="sc-v">${ts}</div></div>
+      <div class="sc"><div class="sc-l">Filled</div><div class="sc-v" style="color:#085041;">${fi}</div></div>
+      <div class="sc"><div class="sc-l">Fill rate</div><div class="sc-v">${fr}%</div></div>
+      <div class="sc"><div class="sc-l">Total subs</div><div class="sc-v">${db.subs.length}</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;">
+      <div><div class="rep-t">Reqs by client</div><div style="position:relative;height:240px;"><canvas id="ch-reqs"></canvas></div></div>
+      <div>
+        <div class="rep-t">Submissions by status</div>
+        <div style="position:relative;height:200px;"><canvas id="ch-stage"></canvas></div>
+        <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:8px;">
+          ${STAGES.map(s=>`<span style="display:flex;align-items:center;gap:3px;font-size:10px;color:var(--t2);"><span style="width:7px;height:7px;border-radius:2px;background:${s.text};display:inline-block;"></span>${s.label}</span>`).join('')}
+        </div>
+      </div>
+    </div>
+  </div>`;
+  const crc=ac.map(c=>({c,n:db.reqs.filter(r=>r.client===c).length})).filter(x=>x.n>0).sort((a,b)=>b.n-a.n);
+  charts.push(new Chart(document.getElementById('ch-reqs'),{type:'bar',data:{labels:crc.map(x=>x.c),datasets:[{data:crc.map(x=>x.n),backgroundColor:'#7F77DD',borderRadius:3,borderWidth:0}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{font:{size:10}},grid:{color:'rgba(0,0,0,0.06)'}},y:{ticks:{font:{size:10}},grid:{display:false}}}}}));
+  charts.push(new Chart(document.getElementById('ch-stage'),{type:'doughnut',data:{labels:STAGES.map(s=>s.label),datasets:[{data:STAGES.map(s=>db.subs.filter(x=>x.stage===s.id).length),backgroundColor:STAGES.map(s=>s.text),borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:false}}}}));
+}
+
+function drawTeam(a){
+  document.getElementById('pg-title').textContent='Team reporting';
+  a.style.overflow='auto';
+  const rd=db.recruiters.map(r=>{
+    const m=db.subs.filter(s=>s.recruiter===r);
+    const pl=m.filter(s=>s.stage==='placed').length;
+    return{name:r,total:m.length,placed:pl,active:m.filter(s=>!['placed','pass','declined'].includes(s.stage)).length,rate:m.length?Math.round((pl/m.length)*100):0,reqs:db.reqs.filter(x=>x.recruiter===r).length};
+  }).sort((a,b)=>b.placed-a.placed||b.total-a.total);
+  const top=rd[0]||{name:'—',placed:0};
+  a.innerHTML=`<div class="rep-wrap">
+    <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-bottom:20px;">
+      <div class="sc"><div class="sc-l">Team size</div><div class="sc-v">${db.recruiters.length}</div></div>
+      <div class="sc"><div class="sc-l">Total submissions</div><div class="sc-v">${db.subs.length}</div></div>
+      <div class="sc"><div class="sc-l">Top performer</div><div class="sc-v" style="font-size:14px;">${esc(top.name)}</div><div style="font-size:11px;color:var(--t2);">${top.placed} placements</div></div>
+      <div class="sc"><div class="sc-l">Avg placement rate</div><div class="sc-v">${rd.length?Math.round(rd.reduce((a,r)=>a+r.rate,0)/rd.length):0}%</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px;">
+      <div><div class="rep-t">Leaderboard</div><div id="lb"></div></div>
+      <div><div class="rep-t">Activity</div><div style="position:relative;height:220px;"><canvas id="ch-team"></canvas></div></div>
+    </div>
+  </div>`;
+  const bs=['#EEEDFE','#E6F1FB','#E1F5EE','#FAEEDA','#FAECE7'],ts=['#3C3489','#0C447C','#085041','#633806','#993C1D'];
+  const lb=document.getElementById('lb');
+  rd.forEach((r,i)=>{
+    lb.innerHTML+=`<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid var(--b1);">
+      <div class="av" style="width:30px;height:30px;font-size:11px;background:${bs[i%5]};color:${ts[i%5]};">${r.name[0]}</div>
+      <div style="flex:1;"><div style="font-size:12px;font-weight:600;">${esc(r.name)}</div><div style="font-size:11px;color:var(--t2);">${r.total} subs · ${r.reqs} reqs</div></div>
+      <div style="text-align:right;"><div style="font-size:12px;font-weight:600;">${r.placed} placed</div><div style="font-size:10px;color:var(--t3);">${r.rate}% rate</div></div>
+    </div>`;
+  });
+  charts.push(new Chart(document.getElementById('ch-team'),{type:'bar',data:{labels:rd.map(r=>r.name),datasets:[{label:'Submissions',data:rd.map(r=>r.total),backgroundColor:'#378ADD',borderRadius:3,borderWidth:0},{label:'Placed',data:rd.map(r=>r.placed),backgroundColor:'#1D9E75',borderRadius:3,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:11}},grid:{display:false}},y:{beginAtZero:true,ticks:{font:{size:11}},grid:{color:'rgba(0,0,0,0.06)'}}}}}));
+}
+
+// ── SETTINGS ──────────────────────────────────────────────
+function drawCfg(a){
+  document.getElementById('pg-title').textContent='Settings & Import';
+  a.style.overflow='auto';
+  const rlist=db.recruiters.map(r=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--bg2);border-radius:var(--r);margin-bottom:5px;">
+      <span style="font-size:12px;">${esc(r)}</span>
+      <button class="btn sm" style="color:#D85A30;" onclick="rmRec('${esc(r)}')">Remove</button>
+    </div>`).join('');
+  const jdlist=db.jds.map(j=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--bg2);border-radius:var(--r);margin-bottom:5px;">
+      <div><div style="font-size:12px;font-weight:600;">${esc(j.company)}</div><div style="font-size:11px;color:var(--t2);">${esc(j.role)}</div></div>
+      <div style="display:flex;gap:5px;">
+        <button class="btn sm" onclick="openJDM('${j.id}')">Edit</button>
+        <button class="btn sm" style="color:#D85A30;" onclick="delJD('${j.id}')">Del</button>
+      </div>
+    </div>`).join('');
+  a.innerHTML=`<div style="padding:16px 20px;display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:860px;">
+    <div>
+      <div style="font-size:12px;font-weight:600;margin-bottom:10px;">Recruiters</div>
+      ${rlist||'<div style="font-size:12px;color:var(--t3);margin-bottom:8px;">No recruiters yet.</div>'}
+      <div style="display:flex;gap:6px;margin-top:8px;">
+        <input class="fi" id="new-rec" placeholder="Name" style="flex:1;">
+        <button class="btn pri sm" onclick="addRec()">Add</button>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:12px;font-weight:600;margin-bottom:10px;">
+        Job Descriptions
+        <button class="btn pri sm" style="margin-left:6px;" onclick="openJDM()">+ Add JD</button>
+      </div>
+      ${jdlist||'<div style="font-size:12px;color:var(--t3);">No job descriptions yet.</div>'}
+    </div>
+    <div>
+      <div style="font-size:12px;font-weight:600;margin-bottom:6px;">Import from Excel</div>
+      <div style="font-size:11px;color:var(--t3);margin-bottom:10px;line-height:1.5;">
+        Upload your <strong style="color:var(--t2);">Requirements.xlsx</strong> directly — the system will read all sheets automatically (reqs, candidates, placements).
+      </div>
+      <div class="drop-z" onclick="document.getElementById('cfi').click()">
+        <div style="font-size:12px;color:var(--t2);margin-bottom:3px;">Click to browse or drag &amp; drop</div>
+        <div style="font-size:11px;color:var(--t3);">Requirements.xlsx &middot; any .xlsx or .csv</div>
+      </div>
+      <input type="file" id="cfi" accept=".csv,.xlsx,.xls,.tsv" style="display:none;" onchange="importFile(this.files[0]);this.value='';">
+      <div style="margin-top:8px;display:flex;gap:6px;">
+        <button class="btn sm" onclick="dlCandTpl()">Download CSV template</button>
+      </div>
+      <div id="import-msg" style="margin-top:8px;font-size:11px;color:var(--t2);line-height:1.6;"></div>
+    </div>
+    <div>
+      <div style="font-size:12px;font-weight:600;margin-bottom:6px;">Data &amp; Backup</div>
+      <div style="font-size:11px;color:var(--t3);margin-bottom:12px;line-height:1.5;">
+        Data lives in memory — it clears when you close the tab.<br>
+        <strong>Export a JSON backup</strong> when done. Import it next session to restore everything.
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        <button class="btn sm" onclick="exportJSON()">&#8681; Export backup (JSON)</button>
+        <button class="btn sm" onclick="document.getElementById('imj').click()">&#8679; Import backup</button>
+        <button class="btn sm dng" onclick="clearAll()">Clear all data</button>
+      </div>
+      <input type="file" id="imj" accept=".json" style="display:none;" onchange="importJSON(this.files[0]);this.value='';">
+    </div>
+  </div>`;
+}
+
+function addRec(){
+  const n=(document.getElementById('new-rec')?.value||'').trim();
+  if(!n){toast('Enter a name');return;}
+  if(db.recruiters.includes(n)){toast('Already exists');return;}
+  db.recruiters.push(n); toast('Recruiter added'); renderAll();
+}
+function rmRec(name){
+  if(!confirm(`Remove ${name}?`))return;
+  db.recruiters=db.recruiters.filter(r=>r!==name); renderAll();
+}
+
+// ── EXPORT / IMPORT ───────────────────────────────────────
+function exportJSON(){
+  const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='ats-backup-'+today()+'.json';
+  a.click();
+  toast('Backup exported');
+}
+function importJSON(file){
+  if(!file)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      const d=JSON.parse(e.target.result);
+      if(Array.isArray(d.reqs)&&Array.isArray(d.subs)){
+        Object.assign(db,{
+          recruiters:d.recruiters||db.recruiters,
+          reqs:d.reqs||[],subs:d.subs||[],
+          jds:d.jds||[],notes:d.notes||{}
+        });
+        toast('Backup restored — '+db.reqs.length+' reqs, '+db.subs.length+' subs');
+        renderAll();
+      } else toast('Invalid backup file');
+    } catch{toast('Could not read file');}
+  };
+  r.readAsText(file);
+}
+function clearAll(){
+  if(!confirm('Clear all data? This cannot be undone.'))return;
+  db.reqs=[];db.subs=[];db.jds=[];db.notes={};
+  toast('Cleared'); renderAll();
+}
+
+// ── CSV/XLSX IMPORT ───────────────────────────────────────
+const CAND_HDRS=['Candidate Name','Client','Role','Recruiter','Status','Clearance','Date','Notes','Resume Text'];
+function dlCandTpl(){
+  const b=new Blob([CAND_HDRS.join(',')+'\n'],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='candidate-template.csv';a.click();
+}
+
+function importFile(file){
+  if(!file)return;
+  const r=new FileReader();
+  if(file.name.match(/\.(csv|tsv)$/i)){r.onload=e=>parseCSV(e.target.result);r.readAsText(file);}
+  else{r.onload=e=>parseRequirementsXLSX(e.target.result);r.readAsArrayBuffer(file);}
+}
+
+// Smart importer — reads all sheets from Requirements.xlsx
+function parseRequirementsXLSX(buf){
+  const loadXLSX=()=>{
+    try{
+      const wb=XLSX.read(buf,{type:'arraybuffer',cellDates:true});
+      let reqs=0,cands=0,placed=0,skipped=[];
+
+      wb.SheetNames.forEach(name=>{
+        const ws=wb.Sheets[name];
+        const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false});
+        if(!rows||rows.length<2)return;
+        const hdrs=rows[0].map(h=>String(h||'').toLowerCase().replace(/[\s\n\r]+/g,' ').trim());
+
+        // ── REQS SHEET (Priority Requirements) ──
+        if(hdrs.includes('position')||hdrs.includes('req status')){
+          const ci=h=>hdrs.indexOf(h);
+          const iCo=ci('company'),iPos=ci('position'),iSt=ci('req status'),iAsgn=ci('assigned');
+          const iSeats=ci('seat #'),iRid=ci('req id'),iClr=ci('clearance'),iSal=ci('salary range');
+          const iJD=ci('link to job description'),iNotes=ci('notes');
+          let lastCo='';
+          rows.slice(1).forEach(row=>{
+            const co=String(row[iCo]||'').trim()||lastCo;
+            const pos=String(row[iPos]||'').trim();
+            if(co)lastCo=co;
+            if(!pos)return;
+            const rawSt=String(row[iSt]||'').toLowerCase();
+            let status='active';
+            if(rawSt.includes('priority'))status='priority';
+            else if(rawSt.includes('hold'))status='hold';
+            else if(rawSt.includes('close'))status='hold';
+            db.reqs.push({
+              id:uid(),client:co,role:pos,status,
+              seats:parseInt(row[iSeats])||1,
+              reqid:String(row[iRid]||'').trim(),
+              recruiter:String(row[iAsgn]||'').trim(),
+              clearance:String(row[iClr]||'').trim(),
+              salary:String(row[iSal]||'').trim(),
+              jd:String(row[iJD]||'').trim(),
+              notes:String(row[iNotes]||'').trim(),
+              location:'',
+            });
+            reqs++;
+          });
+
+        // ── CANDIDATE SHEETS (SECURE IT, USGOV, Inactive Clients) ──
+        } else if(hdrs.includes('candidate and role')||hdrs.includes('candidate & role')){
+          const ci=h=>hdrs.findIndex(x=>x.includes(h));
+          const iCo=ci('company'),iCR=ci('candidate'),iDate=ci('submittal'),iBy=ci('submitted by');
+          const iNotes=ci('notes'),iDec=ci('decision');
+          let lastCo='';
+          rows.slice(1).forEach(row=>{
+            const co=String(row[iCo]||'').trim()||lastCo;
+            const cr=String(row[iCR]||'').trim();
+            if(co)lastCo=co;
+            if(!cr)return;
+            // parse "Name - Role - Company" or "Name | Role | Company"
+            const parts=cr.split(/[-–|]/).map(p=>p.trim());
+            const name=parts[0]||cr;
+            const role=parts[1]||'';
+            const rawDec=String(row[iDec]||'').toLowerCase();
+            let stage='submitted';
+            if(rawDec==='pass')stage='pass';
+            else if(rawDec.includes('offer'))stage='offer';
+            else if(rawDec.includes('declin'))stage='declined';
+            else if(rawDec.includes('place'))stage='placed';
+            const rawDate=row[iDate];
+            let dateStr=today();
+            if(rawDate){const d=new Date(rawDate);if(!isNaN(d))dateStr=d.toISOString().split('T')[0];}
+            db.subs.push({
+              id:uid(),name,client:co,role,req_id:null,
+              stage,recruiter:String(row[iBy]||'').trim(),
+              clearance:'',salary:'',date:dateStr,
+              notes:String(row[iNotes]||'').trim(),resume_text:'',
+            });
+            cands++;
+          });
+
+        // ── PLACEMENTS SHEET ──
+        } else if(hdrs.includes('candidate')&&hdrs.includes('start date')){
+          const ci=h=>hdrs.findIndex(x=>x.includes(h));
+          const iCo=ci('company'),iTi=ci('title'),iCa=ci('candidate'),iRec=ci('recruiter'),iSal=ci('salary'),iSD=ci('submittal'),iStart=ci('start');
+          rows.slice(1).forEach(row=>{
+            const co=String(row[iCo]||'').trim();
+            const ca=String(row[iCa]||'').trim();
+            if(!co||!ca)return;
+            const rawSD=row[iSD],rawStart=row[iStart];
+            const fmtD=d=>{if(!d)return'';const dt=new Date(d);return isNaN(dt)?'':dt.toISOString().split('T')[0];};
+            db.subs.push({
+              id:uid(),name:ca,client:co,role:String(row[iTi]||'').trim(),
+              req_id:null,stage:'placed',recruiter:String(row[iRec]||'').trim(),
+              clearance:'',salary:String(row[iSal]||'').trim(),
+              date:fmtD(rawSD),notes:'Start: '+fmtD(rawStart),resume_text:'',
+            });
+            placed++;
+          });
+
+        } else {
+          skipped.push(name);
+        }
+      });
+
+      const msg=document.getElementById('import-msg');
+      if(msg){
+        let txt=`✓ Imported: ${reqs} reqs, ${cands} candidates, ${placed} placements.`;
+        if(skipped.length)txt+=`\nSkipped sheets: ${skipped.join(', ')}`;
+        msg.textContent=txt;
+      }
+      toast(`Imported ${reqs} reqs + ${cands+placed} candidates`);
+      renderAll();
+    } catch(e){toast('Error reading file: '+e.message);console.error(e);}
+  };
+  if(!window.XLSX){
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload=loadXLSX; document.head.appendChild(s);
+  } else loadXLSX();
+}
+
+// Generic CSV fallback
+function parseCSV(txt){
+  const lines=txt.trim().split('\n'); if(lines.length<2)return;
+  const hdrs=csvRow(lines[0]).map(h=>h.toLowerCase().replace(/[^a-z]/g,''));
+  let ok=0;
+  lines.slice(1).map(csvRow).forEach(row=>{
+    const g=k=>{const i=hdrs.findIndex(h=>h.includes(k));return i>=0?(row[i]||'').trim():'';};
+    const name=g('name')||g('candidate'); if(!name)return;
+    db.subs.push({id:uid(),name,client:g('client'),role:g('role'),recruiter:g('recruiter'),
+      stage:g('status')||g('stage')||'submitted',clearance:g('clearance'),
+      date:g('date')||today(),notes:g('notes'),resume_text:g('resume')});
+    ok++;
+  });
+  toast(`Imported ${ok} candidate${ok!==1?'s':''}`);
+  const msg=document.getElementById('import-msg');if(msg)msg.textContent=`✓ ${ok} imported`;
+  renderAll();
+}
+function csvRow(l){
+  const r=[];let c='',q=false;
+  for(let i=0;i<l.length;i++){
+    const ch=l[i];
+    if(ch==='"')q=!q;
+    else if(ch===','&&!q){r.push(c.trim());c='';}
+    else c+=ch;
+  }
+  r.push(c.trim());return r;
+}
+
+// ── BOOT ──────────────────────────────────────────────────
+renderAll();
+</script>
+</body>
+</html>
