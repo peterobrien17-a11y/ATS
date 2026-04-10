@@ -265,6 +265,14 @@ tr:hover td{background:var(--bg2);cursor:pointer;}
   <div class="ma"><button class="btn" onclick="closeMBG('mJD')">Cancel</button><button class="btn pri" onclick="saveJD()">Save</button></div>
 </div></div>
 
+<!-- ADD CLIENT MODAL -->
+<div class="mbg" id="mAddCo">
+<div class="modal">
+  <div class="mt">Add Client</div>
+  <div class="fl"><div class="fl-l">Company / Client name</div><input class="fi" id="addco-name" placeholder="e.g. Rapid Strategy"></div>
+  <div class="ma"><button class="btn" onclick="closeMBG('mAddCo')">Cancel</button><button class="btn pri" onclick="doAddClient()">Add client</button></div>
+</div></div>
+
 <!-- RENAME COMPANY MODAL -->
 <div class="mbg" id="mCo">
 <div class="modal">
@@ -363,11 +371,11 @@ function go(p,el){
 function setFilter(c,el){filterCo=c;document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('on'));el.classList.add('on');renderContent();}
 function quickFilter(c,el){
   filterCo=c;
-  page='board';
+  page='company';
   document.querySelectorAll('.ni,.ftab').forEach(x=>x.classList.remove('on'));
   el.classList.add('on');
   const btn=document.getElementById('top-btn');
-  btn.textContent='+ Add submission';btn.onclick=openSubM;
+  btn.textContent='+ Add req';btn.onclick=openReqM;
   closePanel();renderAll();
 }
 function setSort(s,el){if(sortBy===s)sortDir=sortDir==='asc'?'desc':'asc';else{sortBy=s;sortDir='desc';}document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('on'));el.classList.add('on');renderContent();}
@@ -402,6 +410,12 @@ function renderStats(){
   }else if(page==='arch'){
     const f=filteredSubs(true);
     sb2.innerHTML=`<div class="sc"><div class="sc-l">Archived</div><div class="sc-v">${f.length}</div></div><div class="sc"><div class="sc-l">Pass</div><div class="sc-v">${f.filter(s=>s.stage==='pass').length}</div></div><div class="sc"><div class="sc-l">Declined</div><div class="sc-v">${f.filter(s=>s.stage==='declined').length}</div></div><div style="margin-bottom:8px;"></div>`;
+  }else if(page==='company'&&filterCo!=='all'){
+    const coReqs=reqs.filter(r=>r.client===filterCo);
+    const coSubs=subs.filter(s=>s.client===filterCo&&!['pass','declined'].includes(s.stage));
+    const ts=coReqs.reduce((a,r)=>a+(+r.seats||1),0);
+    const fi=coReqs.reduce((a,r)=>a+placedSubs(r).length,0);
+    sb2.innerHTML=`<div class="sc"><div class="sc-l">Open reqs</div><div class="sc-v">${coReqs.filter(r=>r.status!=='hold').length}</div></div><div class="sc"><div class="sc-l">Open seats</div><div class="sc-v">${ts}</div></div><div class="sc"><div class="sc-l">Filled</div><div class="sc-v" style="color:#085041;">${fi}</div></div><div class="sc"><div class="sc-l">Candidates in play</div><div class="sc-v">${coSubs.length}</div></div><div class="sc"><div class="sc-l">Interviewing</div><div class="sc-v">${coSubs.filter(s=>['interview_pm','interview_client'].includes(s.stage)).length}</div></div><div style="margin-bottom:8px;"></div>`;
   }else sb2.innerHTML='';
 }
 
@@ -434,7 +448,7 @@ function filteredSubs(archive){
 // ── RENDER CONTENT ────────────────────────────────────────
 function renderContent(){
   killCharts();const a=document.getElementById('va');
-  const fn={reqs:drawReqs,board:drawBoard,list:()=>drawList(a,false),arch:()=>drawList(a,true),biz:()=>drawBiz(a),team:()=>drawTeam(a),cfg:()=>drawCfg(a)};
+  const fn={reqs:drawReqs,board:drawBoard,list:()=>drawList(a,false),arch:()=>drawList(a,true),biz:()=>drawBiz(a),team:()=>drawTeam(a),cfg:()=>drawCfg(a),company:()=>drawCompany(a)};
   (fn[page]||fn.reqs)(a);
 }
 
@@ -741,9 +755,9 @@ function drawCfg(a){
       <div style="display:flex;gap:6px;margin-top:8px;"><input class="fi" id="new-rec" placeholder="Name" style="flex:1;"><button class="btn pri sm" onclick="addRec()">Add</button></div>
     </div>
     <div>
-      <div style="font-size:12px;font-weight:600;margin-bottom:10px;">Companies / Clients</div>
-      <div style="font-size:11px;color:var(--t3);margin-bottom:8px;">Companies are auto-created from reqs and submissions. Rename or remove them here.</div>
-      ${coList||'<div style="font-size:12px;color:var(--t3);">No companies yet — add a req or submission first.</div>'}
+      <div style="font-size:12px;font-weight:600;margin-bottom:10px;">Companies / Clients <button class="btn pri sm" style="margin-left:6px;" onclick="openAddCoModal()">+ Add client</button></div>
+      <div style="font-size:11px;color:var(--t3);margin-bottom:8px;">Rename or remove clients. Adding a client here makes it available when creating reqs and submissions.</div>
+      ${coList||'<div style="font-size:12px;color:var(--t3);">No companies yet.</div>'}
     </div>
     <div>
       <div style="font-size:12px;font-weight:600;margin-bottom:10px;">Job Descriptions <button class="btn pri sm" style="margin-left:6px;" onclick="openJDM()">+ Add JD</button></div>
@@ -774,6 +788,24 @@ function rmRec(name){if(!confirm(`Remove ${name}?`))return;recruiters=recruiters
 
 // ── COMPANY MANAGEMENT ────────────────────────────────────
 let renamingCo=null;
+
+function openAddCoModal(){
+  document.getElementById('addco-name').value='';
+  document.getElementById('mAddCo').classList.add('open');
+}
+document.getElementById('mAddCo').addEventListener('click',e=>{if(e.target===e.currentTarget)closeMBG('mAddCo');});
+async function doAddClient(){
+  const name=document.getElementById('addco-name').value.trim();
+  if(!name){toast('Enter a client name');return;}
+  if(allClients().includes(name)){toast('Client already exists');closeMBG('mAddCo');return;}
+  // Create a placeholder req so the client appears in the sidebar
+  // (clients are derived from reqs+subs, so we add a stub req)
+  setSyncing(true);
+  const{data}=await sb.from('reqs').insert({client:name,role:'— placeholder —',status:'hold',seats:1,reqid:'',recruiter:'',clearance:'',salary:'',location:'',notes:'Auto-created client entry',jd:''}).select();
+  if(data)reqs.push(data[0]);
+  setSyncing(false);
+  closeMBG('mAddCo');toast(`"${name}" added`);renderAll();
+}
 function openRenameCoModal(name){
   renamingCo=name;
   document.getElementById('co-current').textContent=name;
