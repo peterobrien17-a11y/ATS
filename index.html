@@ -375,7 +375,7 @@ function quickFilter(c,el){
   document.querySelectorAll('.ni,.ftab').forEach(x=>x.classList.remove('on'));
   el.classList.add('on');
   const btn=document.getElementById('top-btn');
-  btn.textContent='+ Add req';btn.onclick=openReqM;
+  btn.textContent='+ Add req';btn.onclick=()=>openReqMForClient(c);
   closePanel();renderAll();
 }
 function setSort(s,el){if(sortBy===s)sortDir=sortDir==='asc'?'desc':'asc';else{sortBy=s;sortDir='desc';}document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('on'));el.classList.add('on');renderContent();}
@@ -451,6 +451,138 @@ function renderContent(){
   const fn={reqs:drawReqs,board:drawBoard,list:()=>drawList(a,false),arch:()=>drawList(a,true),biz:()=>drawBiz(a),team:()=>drawTeam(a),cfg:()=>drawCfg(a),company:()=>drawCompany(a)};
   (fn[page]||fn.reqs)(a);
 }
+
+// ── COMPANY PAGE ──────────────────────────────────────────
+function drawCompany(a){
+  const co=filterCo;
+  document.getElementById('pg-title').textContent=co;
+  a.style.overflow='auto';
+
+  const coReqs=reqs.filter(r=>r.client===co);
+  const coSubs=subs.filter(s=>s.client===co&&!['pass','declined'].includes(s.stage));
+  const coArch=subs.filter(s=>s.client===co&&['pass','declined'].includes(s.stage));
+
+  let html=`<div style="padding:16px 20px;display:flex;flex-direction:column;gap:20px;">`;
+
+  // ── OPEN REQS ──
+  html+=`<div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div style="font-size:13px;font-weight:600;">Open Requisitions</div>
+      <button class="btn pri sm" onclick="openReqMForClient('${esc(co)}')">+ Add req</button>
+    </div>`;
+
+  if(!coReqs.length){
+    html+=`<div style="font-size:12px;color:var(--t3);padding:12px 0;">No requisitions for this client yet.</div>`;
+  } else {
+    html+=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;">`;
+    coReqs.forEach(r=>{
+      const rs=rstg(r.status);
+      const active=activeSubs(r),placed=placedSubs(r),seats=+r.seats||1;
+      const pct=Math.min(Math.round((placed.length/seats)*100),100);
+      const pc=pct>=100?'#1D9E75':pct>=50?'#BA7517':'#378ADD';
+      html+=`<div class="rcard${r.status==='priority'?' pr':''}" onclick="openReqPanel('${r.id}')" style="cursor:pointer;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+          <div class="rc-role" style="margin-bottom:0;">${esc(r.role)}</div>
+          <span class="pill" style="background:${rs.bg};color:${rs.text};flex-shrink:0;margin-left:8px;">${rs.label}</span>
+        </div>
+        ${r.clearance?`<div class="rc-det"><span>Clearance:</span> ${esc(r.clearance)}</div>`:''}
+        ${r.salary?`<div class="rc-det"><span>Salary:</span> ${esc(r.salary)}</div>`:''}
+        ${r.recruiter?`<div class="rc-det"><span>Recruiter:</span> ${esc(r.recruiter)}</div>`:'<div class="rc-det" style="color:#D85A30;">Unassigned</div>'}
+        ${r.reqid?`<div class="rc-det"><span>Req ID:</span> ${esc(r.reqid)}</div>`:''}
+        <div class="prog-wrap">
+          <div class="prog-lbl"><span>${active.length} in play</span><span>${placed.length} / ${seats} filled</span></div>
+          <div class="prog-track"><div class="prog-fill" style="width:${pct}%;background:${pc};"></div></div>
+        </div>
+      </div>`;
+    });
+    html+=`</div>`;
+  }
+  html+=`</div>`;
+
+  // ── CANDIDATES IN PLAY ──
+  html+=`<div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div style="font-size:13px;font-weight:600;">Candidates in Play <span style="font-size:12px;font-weight:400;color:var(--t3);margin-left:6px;">${coSubs.length}</span></div>
+      <button class="btn pri sm" onclick="openSubMForClient('${esc(co)}')">+ Add submission</button>
+    </div>`;
+
+  if(!coSubs.length){
+    html+=`<div style="font-size:12px;color:var(--t3);padding:12px 0;">No active candidates for this client.</div>`;
+  } else {
+    // Group by stage
+    const activeStages=['submitted','screening','interview_pm','interview_client','offer','placed'];
+    activeStages.forEach(sid=>{
+      const stageCards=coSubs.filter(s=>s.stage===sid);
+      if(!stageCards.length)return;
+      const stage=stg(sid);
+      html+=`<div style="margin-bottom:14px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span class="pill" style="background:${stage.bg};color:${stage.text};">${stage.label}</span>
+          <span style="font-size:11px;color:var(--t3);">${stageCards.length}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;">`;
+      stageCards.forEach(s=>{
+        const av=avCol(s.name);
+        html+=`<div class="rcard" onclick="openSubPanel('${s.id}')" style="cursor:pointer;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="av" style="width:28px;height:28px;background:${av.bg};color:${av.text};font-size:11px;">${initials(s.name)}</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(s.name)}</div>
+              <div style="font-size:11px;color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(s.role)||'—'}</div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--t3);">
+            <span>${esc(s.recruiter)||'—'}</span>
+            <span>${fmtDate(s.date)}</span>
+          </div>
+          ${s.clearance?`<div style="font-size:10px;color:var(--t3);margin-top:3px;">${esc(s.clearance)}</div>`:''}
+          ${s.notes?`<div style="font-size:11px;color:var(--t2);margin-top:5px;padding-top:5px;border-top:0.5px solid var(--b1);line-height:1.4;">${esc(s.notes)}</div>`:''}
+        </div>`;
+      });
+      html+=`</div></div>`;
+    });
+  }
+  html+=`</div>`;
+
+  // ── ARCHIVE ──
+  if(coArch.length){
+    html+=`<div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--t3);">Archive <span style="font-size:12px;font-weight:400;">${coArch.length}</span></div>
+      <div style="background:var(--bg);border:0.5px solid var(--b1);border-radius:var(--r);overflow:hidden;">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr>
+          <th style="padding:7px 10px;text-align:left;font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;border-bottom:0.5px solid var(--b1);background:var(--bg2);">Candidate</th>
+          <th style="padding:7px 10px;text-align:left;font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;border-bottom:0.5px solid var(--b1);background:var(--bg2);">Role</th>
+          <th style="padding:7px 10px;text-align:left;font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;border-bottom:0.5px solid var(--b1);background:var(--bg2);">Status</th>
+          <th style="padding:7px 10px;text-align:left;font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;border-bottom:0.5px solid var(--b1);background:var(--bg2);">Recruiter</th>
+          <th style="padding:7px 10px;text-align:left;font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;border-bottom:0.5px solid var(--b1);background:var(--bg2);">Date</th>
+        </tr></thead>
+        <tbody>`;
+    coArch.forEach(s=>{
+      const st=stg(s.stage),av=avCol(s.name);
+      html+=`<tr onclick="openSubPanel('${s.id}')" style="cursor:pointer;">
+        <td style="padding:7px 10px;border-bottom:0.5px solid var(--b1);">
+          <div style="display:flex;align-items:center;gap:7px;">
+            <div class="av" style="width:22px;height:22px;background:${av.bg};color:${av.text};font-size:9px;">${initials(s.name)}</div>
+            <span style="font-weight:600;">${esc(s.name)}</span>
+          </div>
+        </td>
+        <td style="padding:7px 10px;border-bottom:0.5px solid var(--b1);color:var(--t2);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(s.role)}</td>
+        <td style="padding:7px 10px;border-bottom:0.5px solid var(--b1);"><span class="pill" style="background:${st.bg};color:${st.text};">${st.label}</span></td>
+        <td style="padding:7px 10px;border-bottom:0.5px solid var(--b1);color:var(--t2);">${esc(s.recruiter)||'—'}</td>
+        <td style="padding:7px 10px;border-bottom:0.5px solid var(--b1);color:var(--t3);white-space:nowrap;">${fmtDate(s.date)}</td>
+      </tr>`;
+    });
+    html+=`</tbody></table></div></div>`;
+  }
+
+  html+=`</div>`;
+  a.innerHTML=html;
+}
+
+// helpers to pre-fill client when opening modals from company page
+function openReqMForClient(co){openReqM();setTimeout(()=>{document.getElementById('rq-co').value=co;},50);}
+function openSubMForClient(co){openSubM();setTimeout(()=>{const sel=document.getElementById('s-co');[...sel.options].forEach(o=>{o.selected=o.value===co;});fillReqDrop();},50);}
 
 // ── REQS BOARD ────────────────────────────────────────────
 function drawReqs(a){
