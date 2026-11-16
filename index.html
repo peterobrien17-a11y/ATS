@@ -108,7 +108,7 @@ function bindTeamGoals(){
 }
 
 let priorityWeekOffset=0;
-const PRIORITY_RECRUITERS=['Peter','Melizza','Nisha','Jessi'];
+const PRIORITY_RECRUITERS=['Melizza','Nisha','Jessi','Peter'];
 function priorityWeek(){const start=weekStart(new Date());start.setDate(start.getDate()-7*priorityWeekOffset);const end=new Date(start);end.setDate(end.getDate()+6);const key=[start.getFullYear(),String(start.getMonth()+1).padStart(2,'0'),String(start.getDate()).padStart(2,'0')].join('-');return{start,end,key}}
 function priorityAssignments(r){const marker='[ATS_WEEKLY_PRIORITIES]';const line=String(r.notes||'').split('\n').find(x=>x.startsWith(marker));if(!line)return{};try{return JSON.parse(line.slice(marker.length))||{}}catch{return{}}}
 function priorityNote(notes,data){const marker='[ATS_WEEKLY_PRIORITIES]';return String(notes||'').split('\n').filter(x=>!x.startsWith(marker)).concat(marker+JSON.stringify(data)).join('\n').trim()}
