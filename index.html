@@ -50,14 +50,14 @@ function weeklyPerformanceData(offset=0){
  const rows=names.map(name=>({name,submissions:0,interviews:0,offers:0}));
  const byName=new Map(rows.map(r=>[r.name,r]));
  const byId=new Map(subs.map(s=>[String(s.id),s]));
- subs.forEach(s=>{if(inside(subDate(s)))byName.get(s.recruiter)?.submissions++});
+ subs.forEach(s=>{if(inside(subDate(s))&&byName.has(s.recruiter))byName.get(s.recruiter).submissions++});
  const counted=new Set();
  events.forEach(e=>{
   const metric=e.to==='interview_client'?'interviews':(['offer','offer_signed'].includes(e.to)?'offers':null);
   if(!metric||!inside(e.at))return;
   const sub=byId.get(String(e.submission_id));if(!sub)return;
   const key=String(sub.id)+'|'+metric;if(counted.has(key))return;counted.add(key);
-  byName.get(sub.recruiter)?.[metric]++;
+  if(byName.has(sub.recruiter))byName.get(sub.recruiter)[metric]++;
  });
  return {start:now,end,rows,totals:{submissions:rows.reduce((a,r)=>a+r.submissions,0),interviews:rows.reduce((a,r)=>a+r.interviews,0),offers:rows.reduce((a,r)=>a+r.offers,0)}};
 }
